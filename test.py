@@ -21,6 +21,23 @@ class NetDevice:
         pass
 
 
+def find_MAC(node, port, mac, visited):
+    for edge in G.edges():
+        if (node in edge) and (G.edges[edge[0], edge[1]][node] == port) and (edge not in visited):
+            if(edge[0] == node):
+                next_node = edge[1]
+            else:
+                next_node = edge[0] 
+            
+            visited.append(edge)
+            if(not hasattr(next_node, 'pm')):
+                mac.append(next_node.mac)
+                return
+            mac.append(next_node.pm[G.edges[edge[0], edge[1]][next_node]])
+            for p in next_node.pm.keys():
+                find_MAC(next_node, p, mac, visited)
+
+
 if __name__ == '__main__':
     tv = Device(2, 2, 1)
     phone = Device(3, 2, 2)
@@ -35,11 +52,14 @@ if __name__ == '__main__':
     G.add_node(router)
 
     G.add_edge(tv, switch)
-    G[tv][switch]['con'] = (-1, 1)
+    G.edges[tv, switch][tv] = -1
+    G.edges[tv, switch][switch] = 1
     G.add_edge(phone, switch)
-    G[phone][switch]['con'] = (-1, 2)
+    G[phone][switch][phone] = -1
+    G[phone][switch][switch] = 2
     G.add_edge(switch, router)
-    G[switch][router]['con'] = (3, 1)
+    G[switch][router][switch] = 3
+    G[switch][router][router] = 1
 
     pos = nx.spring_layout(G)
 
@@ -70,12 +90,19 @@ if __name__ == '__main__':
     labels[switch] = 'Switch'
     labels[phone] = 'Phone'
     nx.draw_networkx_labels(G, pos, labels, font_size=8, font_color=(0, 0, 0))
-    nx.draw_networkx_edge_labels(G,
-                                 pos, {
-                                     (tv, switch): G[tv][switch]['con'],
-                                     (phone, switch): G[phone][switch]['con'],
-                                     (switch, router): G[switch][router]['con']
-                                 },
-                                 font_size=8,
-                                 font_color=(1, 0.2, 0.4))
+    # nx.draw_networkx_edge_labels(G,
+    #                              pos, {
+    #                                  (tv, switch): G[tv][switch]['con'],
+    #                                  (phone, switch): G[phone][switch]['con'],
+    #                                  (switch, router): G[switch][router]['con']
+    #                              },
+    #                              font_size=8,
+    #                              font_color=(1, 0.2, 0.4))
     plt.show()
+    
+    mac = list()
+    visited = list()
+
+    find_MAC(switch, 3, mac, visited)
+    print(mac)
+
