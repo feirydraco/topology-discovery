@@ -260,80 +260,86 @@ def remove_mac(G, mac):
 
 def graph_creation(n):
     # Edge devices
-    Laptop = Device("10.0.{}.1".format(n - 1), "009", 1,
+    Laptop = Device("10.0.{}.1".format(n - 1), "009{}".format(n - 1), 1,
                     "Laptop{}".format(n - 1), DevType.APPLIANCE)
-    HDD_Recorder = Device("10.0.{}.2".format(n - 1), "090", 2,
+    HDD_Recorder = Device("10.0.{}.2".format(n - 1), "090{}".format(n - 1), 2,
                           "HDD_Recorder{}".format(n - 1), DevType.APPLIANCE)
-    Portable_GD = Device("10.0.{}.3".format(n - 1), "900", 3,
+    Portable_GD = Device("10.0.{}.3".format(n - 1), "900{}".format(n - 1), 3,
                          "Portable_GD{}".format(n - 1), DevType.APPLIANCE)
-    Audio_device = Device("10.0.{}.4".format(n - 1), "008", 4,
+    Audio_device = Device("10.0.{}.4".format(n - 1), "008{}".format(n - 1), 4,
                           "Audio_device{}".format(n - 1), DevType.APPLIANCE)
-    Air_condition = Device("10.0.{}.5".format(n - 1), "080", 5,
+    Air_condition = Device("10.0.{}.5".format(n - 1), "080{}".format(n - 1), 5,
                            "Air_condition{}".format(n - 1), DevType.APPLIANCE)
-    TV = Device("10.0.{}.6".format(n - 1), "800", 6, "TV{}".format(n - 1),
-                DevType.APPLIANCE)
-    Gaming_device = Device("10.0.{}.7".format(n - 1), "006", 7,
+    TV = Device("10.0.{}.6".format(n - 1), "800{}".format(n - 1), 6,
+                "TV{}".format(n - 1), DevType.APPLIANCE)
+    Gaming_device = Device("10.0.{}.7".format(n - 1), "006{}".format(n - 1), 7,
                            "Gaming_device{}".format(n - 1), DevType.APPLIANCE)
-    Desktop_PC = Device("10.0.{}.8".format(n - 1), "060", 8,
+    Desktop_PC = Device("10.0.{}.8".format(n - 1), "060{}".format(n - 1), 8,
                         "Desktop_PC{}".format(n - 1), DevType.APPLIANCE)
-    Security_Cam = Device("10.0.{}.9".format(n - 1), "600", 9,
+    Security_Cam = Device("10.0.{}.9".format(n - 1), "600{}".format(n - 1), 9,
                           "Security_Cam{}".format(n - 1), DevType.APPLIANCE)
 
     # Switches
-    SW1 = NetDevice("10.0.{}.10".format(n - 1), {
-        1: "010",
-        2: "010",
-        3: "010",
-        4: "010"
-    }, 10, "Switch1{}".format(n - 1), DevType.SWITCH)
-    SW2 = NetDevice("10.0.{}.20".format(n - 1), {
-        1: "002",
-        2: "002",
-        3: "002"
-    }, 11, "Switch2{}".format(n - 1), DevType.SWITCH)
-    SW3 = NetDevice("10.0.{}.30".format(n - 1), {
-        1: "003",
-        2: "003",
-        3: "003"
-    }, 12, "Switch3{}".format(n - 1), DevType.SWITCH)
+    SW1 = NetDevice(
+        "10.0.{}.10".format(n - 1), {
+            1: "010{}".format(n - 1),
+            2: "010{}".format(n - 1),
+            3: "010{}".format(n - 1),
+            4: "010{}".format(n - 1)
+        }, 10, "Switch1{}".format(n - 1), DevType.SWITCH)
+    SW2 = NetDevice(
+        "10.0.{}.20".format(n - 1), {
+            1: "002{}".format(n - 1),
+            2: "002{}".format(n - 1),
+            3: "002{}".format(n - 1)
+        }, 11, "Switch2{}".format(n - 1), DevType.SWITCH)
+    SW3 = NetDevice(
+        "10.0.{}.30".format(n - 1), {
+            1: "003{}".format(n - 1),
+            2: "003{}".format(n - 1),
+            3: "003{}".format(n - 1)
+        }, 12, "Switch3{}".format(n - 1), DevType.SWITCH)
     SW4 = NetDevice("10.0.{}.40".format(n - 1), {
-        1: "004",
-        2: "004"
+        1: "004{}".format(n - 1),
+        2: "004{}".format(n - 1)
     }, 13, "Switch4{}".format(n - 1), DevType.SWITCH)
     PLC1 = NetDevice("10.0.{}.50".format(n - 1), {
-        1: "005",
-        2: "105"
+        1: "005{}".format(n - 1),
+        2: "105{}".format(n - 1)
     }, 14, "PLC1{}".format(n - 1), DevType.SWITCH)
     PLC2 = NetDevice("10.0.{}.60".format(n - 1), {
-        1: "006",
-        2: "006"
+        1: "006{}".format(n - 1),
+        2: "006{}".format(n - 1)
     }, 15, "PLC2{}".format(n - 1), DevType.SWITCH)
-    PLC3 = NetDevice("10.0.{}.70".format(n - 1), {
-        1: "007",
-        2: "007",
-        3: "007"
-    }, 16, "PLC3{}".format(n - 1), DevType.SWITCH)
-    PLC4 = NetDevice("10.0.{}.80".format(n - 1), {
-        1: "020",
-        2: "020",
-        3: "020"
-    }, 17, "PLC4{}".format(n - 1), DevType.SWITCH)
-    WL1 = NetDevice("10.0.{}.90".format(n - 1), {
-        1: "200",
-        2: "200",
-        3: "200"
-    }, 20, "WL1{}".format(n - 1), DevType.SWITCH)
+    PLC3 = NetDevice(
+        "10.0.{}.70".format(n - 1), {
+            1: "007{}".format(n - 1),
+            2: "007{}".format(n - 1),
+            3: "007{}".format(n - 1)
+        }, 16, "PLC3{}".format(n - 1), DevType.SWITCH)
+    PLC4 = NetDevice(
+        "10.0.{}.80".format(n - 1), {
+            1: "020{}".format(n - 1),
+            2: "020{}".format(n - 1),
+            3: "020{}".format(n - 1)
+        }, 17, "PLC4{}".format(n - 1), DevType.SWITCH)
+    WL1 = NetDevice(
+        "10.0.{}.90".format(n - 1), {
+            1: "200{}".format(n - 1),
+            2: "200{}".format(n - 1),
+            3: "200{}".format(n - 1)
+        }, 20, "WL1{}".format(n - 1), DevType.SWITCH)
 
     # Another Router
     WR = NetDevice("10.0.{}.10".format(n - 1), {
-        1: "001",
-        2: "001"
+        1: "001{}".format(n - 1),
+        2: "001{}".format(n - 1)
     }, 21, "WR{}".format(n - 1), DevType.SWITCH)
 
     # Access gateway
     AGW = NetDevice("10.1.{}.1".format(n - 1), {
-        1: "000",
-        2: "100"
+        1: "000{}".format(n - 1),
+        2: "100{}".format(n - 1)
     }, 22, "FloorRouter{}".format(n - 1), DevType.ROUTER)
 
     node_list = [
@@ -420,31 +426,41 @@ def graph_creation(n):
 
 if __name__ == '__main__':
     G = nx.Graph()
+    n = 10
 
-    AGW = NetDevice("99.99.99.99", {
-        1: "000",
-        2: "100"
-    }, 22, "Gateway", DevType.ROUTER)
+    AGW = NetDevice("99.99.99.99", dict(), 22, "Gateway", DevType.ROUTER)
 
     G.add_node(AGW)
 
     node_list = [AGW]
     edge_list = []
 
-    for n in range(1, 10):
+    for n in range(1, 3):
         subnet = graph_creation(n)
+        # print(nx.get_edge_attributes(subnet, ))
         xe = [x.label for x in subnet.nodes()]
         print(xe)
         node_list.extend(subnet.nodes())
         edge_list.extend(subnet.edges())
         G.add_nodes_from(subnet.nodes())
+        print(subnet.edges[G.edges[][]])
         G.add_edges_from(subnet.edges())
         connection_node = [
             node for node in subnet.nodes()
             if node.label == "FloorRouter{}".format(n - 1)
         ]
-        print(connection_node[0].label)
-        G.add_edge(AGW, connection_node[0])
+        floorRouter = connection_node[0]
+
+        AGW.pm[n - 1] = "{}".format(n - 1)
+        floorRouter.pm[int("1{}".format(n - 1))] = "999{}".format(n - 1)
+        G.add_edge(AGW, floorRouter)
+
+        G.edges[AGW, floorRouter][AGW] = n - 1
+        G.edges[AGW, floorRouter][floorRouter] = int("1{}".format(n - 1))
+
+    for node in G.nodes():
+        if node.label == 'Gateway':
+            print(node.pm)
 
     pos = nx.spring_layout(G)
 
@@ -471,7 +487,12 @@ if __name__ == '__main__':
 
     nx.draw_networkx_labels(G, pos, mapping, font_size=9, font_color=(0, 0, 0))
 
-    # populate_AFT(G)
+    mac = list()
+    vis = list()
+    find_MAC(AGW, 0, mac, vis)
+    print(mac)
+
+    #populate_AFT(G)
 
     # discovered_edges = find_connections(G)
     # discovered_nodes = [
