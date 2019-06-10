@@ -153,21 +153,22 @@ def populate_AFT(G):
 
 
 def Skeleton(G, ML):
-    unmarked = [node for node in G.nodes()]
+    unmarked = [node for node in G.nodes() if not node.dtype == DevType.APPLIANCE]
+    internal_nodes = [node for node in G.nodes() if not node.dtype == DevType.APPLIANCE]
     edges = []
     router = set([find_node_from_mac(G, mac) for mac in ML])
-    for node in G.nodes():       
+    for node in internal_nodes:       
         for port in node.pm.keys():
-            visible_nodes = set([find_node_from_mac(G, mac) for mac in node.pm[port]])
+            visible_nodes = set([find_node_from_mac(G, mac) for mac in node.AFT[port]])
             if(not len(visible_nodes & router) == 0):
-                node.pm[port] = []
+                node.AFT[port] = []
     
     # for node in G.nodes():
     #     marked[node] = dict()
     #     for port in node.pm.keys():
     #         marked[node][port] = False
 
-    while(not (len(unmarked) == 0)):
+    while(not ((len(unmarked) == 0) or (len(unmarked) == 1 and unmarked[0].dtype == DevType.ROUTER))):
         L = []
         for node in unmarked:
             flag = 0
@@ -177,25 +178,54 @@ def Skeleton(G, ML):
                     break
             if(flag == 0):
                 L.append(node)
+                
         for node in unmarked:
             for port in node.pm.keys():
-                visible_nodes = set([find_node_from_mac(G, mac) for mac in node.pm[port]]) 
+                #print(node.label, port)
+                visible_nodes = set([find_node_from_mac(G, mac) for mac in node.AFT[port]])
+                visible_nodes = set([node for node in visible_nodes if not node.dtype == DevType.APPLIANCE]) 
                 flag = 0
-                for node in visible_nodes:
-                    if node not in L:
+                for node1 in visible_nodes:
+                    if node1 not in L:
                         flag = 1
                         break
                 if(flag == 1):
-                    break
+                    continue
                 for next_node in visible_nodes:
                     edges.append((node, next_node))
+                    print(edges)
                     unmarked.remove(next_node)
-                    mac = [mac for port in next_node.pm.keys() for mac in next_node.pm[port]]
-                    remove_mac(G, mac)
+                    macs = set(next_node.pm.values())
 
-# def remove_mac(G, mac):
-#     for node in G.nodes():
 
+                    for mac in macs:
+                        G = remove_mac(G, mac)
+
+                    #print([node.label for node in unmarked])
+                        
+    return edges
+
+def remove_mac(G, mac):
+    nodelist=[]
+    new_G = []
+    if(isinstance(G, list)):
+        nodelist = G
+    else:
+        nodelist = G.nodes()
+
+    for node in nodelist:
+        if(not hasattr(node, 'pm')):
+            continue
+        for port in node.pm.keys():
+            if(mac in node.AFT[port]):
+                node.AFT[port].remove(mac)
+        new_G.append(node)
+
+    # for node in G.nodes():
+    #     print(node.label)
+    #     if(hasattr(node, 'AFT')):
+    #         print(node.AFT)
+    return G
 
 
 
@@ -367,6 +397,9 @@ if __name__ == '__main__':
     nx.draw_networkx_labels(H, pos, mapping, font_size=8, font_color=(0, 0, 0))
 
 
+
+
+
     internal_edges = [edge for edge in G.edges if (not edge[0].dtype == DevType.APPLIANCE) and (not edge[1].dtype == DevType.APPLIANCE)]
     internal_nodes = [node for node in G.nodes if not node.dtype == DevType.APPLIANCE]
 
@@ -399,6 +432,41 @@ if __name__ == '__main__':
 
     nx.draw_networkx_labels(H, pos, mapping, font_size=8, font_color=(0, 0, 0))
 
+    internal_edges = Skeleton(G, ['000', '100'])
+    internal_nodes = [node for node in G.nodes if not node.dtype == DevType.APPLIANCE]
+
+
+    H = nx.Graph()
+    H.add_nodes_from(internal_nodes)
+    H.add_edges_from(internal_edges)
+
+    pos = nx.spring_layout(H)
+
+    ax = plt.subplot(224)
+    ax.set_xlabel('Network discovered from algorithm 2')
+
+    nx.draw_networkx_nodes(H,
+                           pos,
+                           nodelist=internal_nodes,
+                           node_color='pink',
+                           node_size=700,
+                           alpha=0.8)
+
+    nx.draw_networkx_edges(G,
+                           pos,
+                           edgelist=internal_edges,
+                           width=1,
+                           alpha=0.9,
+                           edge_color='black')    
+
+    mapping = dict()
+    for elem in internal_nodes:
+        mapping[elem] = elem.label              
+
+    nx.draw_networkx_labels(H, pos, mapping, font_size=8, font_color=(0, 0, 0))
+
+    #print(Skeleton(G, ['000', '100']))
+    # print(remove_mac(G, '007'))
 
     plt.show()
 
