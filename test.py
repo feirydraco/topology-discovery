@@ -2,10 +2,12 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import enum
 
+
 class DevType(enum.Enum):
     ROUTER = 1
     SWITCH = 2
     APPLIANCE = 3
+
 
 class Device:
     def __init__(self, ip, mac, did, label, dtype="Undefined"):
@@ -16,7 +18,8 @@ class Device:
         self.dtype = dtype
 
     def getName(self):
-            return self.did
+        return self.did
+
 
 class NetDevice:
     def __init__(self, ip, pm, did, label, dtype="Undefined"):
@@ -29,34 +32,38 @@ class NetDevice:
 
     def getAFT(self):
         pass
-    
+
     def getName(self):
         return self.dtype
 
     def dispAFT(self):
         print(self.AFT)
 
+
 def find_node_from_ip(G, ip):
     for node in G.nodes():
         if node.ip == ip:
             return node
 
+
 def find_node_from_mac(G, mac):
     for node in G.nodes():
-        if(hasattr(node, 'pm')):
+        if (hasattr(node, 'pm')):
             for port in node.pm.keys():
-                if(node.pm[port] == mac):
+                if (node.pm[port] == mac):
                     return node
+
 
 def find_next_hop_ips(G, ip):
     node = find_node_from_ip(G, ip)
-    
+
     next_hop_ips = []
     for neighbor in G[node]:
-        if(neighbor.dtype == DevType.ROUTER):
+        if (neighbor.dtype == DevType.ROUTER):
             next_hop_ips.append(neighbor.ip)
-    
+
     return next_hop_ips
+
 
 def find_router(G, router_ip):
     router_set = [router_ip]
@@ -72,20 +79,21 @@ def find_router(G, router_ip):
             router_set = router_set + next_hop
     return visited
 
+
 def find_connections(G):
     # Init variables
-    all_nodes = []   # set of all routers and switches in the subnet
+    all_nodes = []  # set of all routers and switches in the subnet
     matched = dict()
-    edges = []  
+    edges = []
     # Find set of switches
     switches = []
     for node in G.nodes():
-        if(node.dtype == DevType.SWITCH):
+        if (node.dtype == DevType.SWITCH):
             switches.append(node)
     # Find the set of routers
     routers = []
     for node in G.nodes():
-        if(node.dtype == DevType.ROUTER):
+        if (node.dtype == DevType.ROUTER):
             routers.append(node)
 
     # Set matched to false for all switches
@@ -103,27 +111,38 @@ def find_connections(G):
                 continue
             else:
                 for switch2 in switches:
-                    if(not switch2 == switch1):
+                    if (not switch2 == switch1):
                         for port2 in switch2.pm.keys():
-                            mac1 = set([find_node_from_mac(G, mac) for mac in switch1.AFT[port1]])     # nodes with MACs visible from port1 of switch1
-                            mac2 = set([find_node_from_mac(G, mac) for mac in switch2.AFT[port2]])  # nodes with MACs visible from port2 of switch2
-                            
-                            if((mac1 | mac2) == set(all_nodes) and (mac1 - mac2) == mac1):
+                            mac1 = set([
+                                find_node_from_mac(G, mac)
+                                for mac in switch1.AFT[port1]
+                            ])  # nodes with MACs visible from port1 of switch1
+                            mac2 = set([
+                                find_node_from_mac(G, mac)
+                                for mac in switch2.AFT[port2]
+                            ])  # nodes with MACs visible from port2 of switch2
+
+                            if ((mac1 | mac2) == set(all_nodes)
+                                    and (mac1 - mac2) == mac1):
                                 matched[switch1][port1] = True
                                 matched[switch2][port2] = True
-                                edges.append((switch1.label, switch2.label))#{switch1: port1, switch2: port2}))
+                                edges.append(
+                                    (switch1.label, switch2.label
+                                     ))  # {switch1: port1, switch2: port2}))
 
     for router in routers:
         for switch in switches:
             for port in switch.pm.keys():
-                if(matched[switch][port] == False):
-                    mac = [find_node_from_mac(G, mac) for mac in switch.AFT[port]]
-                    if(router in mac):
+                if not matched[switch][port]:
+                    mac = [
+                        find_node_from_mac(G, mac) for mac in switch.AFT[port]
+                    ]
+                    if (router in mac):
                         matched[switch][port] = True
                         edges.append((switch.label, router.label))
 
     return edges
-                            
+
 
 def find_MAC(node, port, mac, visited):
     for edge in G.edges():
@@ -133,7 +152,7 @@ def find_MAC(node, port, mac, visited):
                 next_node = edge[1]
             else:
                 next_node = edge[0]
-        
+
             visited.append(edge)
             if (not hasattr(next_node, 'pm')):
                 #mac.append(next_node.mac)
@@ -141,6 +160,7 @@ def find_MAC(node, port, mac, visited):
             mac.append(next_node.pm[G.edges[edge[0], edge[1]][next_node]])
             for p in next_node.pm.keys():
                 find_MAC(next_node, p, mac, visited)
+
 
 def populate_AFT(G):
     for node in G.nodes:
@@ -153,43 +173,53 @@ def populate_AFT(G):
 
 
 def Skeleton(G, ML):
-    unmarked = [node for node in G.nodes() if not node.dtype == DevType.APPLIANCE]
-    internal_nodes = [node for node in G.nodes() if not node.dtype == DevType.APPLIANCE]
+    unmarked = [
+        node for node in G.nodes() if not node.dtype == DevType.APPLIANCE
+    ]
+    internal_nodes = [
+        node for node in G.nodes() if not node.dtype == DevType.APPLIANCE
+    ]
     edges = []
     router = set([find_node_from_mac(G, mac) for mac in ML])
-    for node in internal_nodes:       
+    for node in internal_nodes:
         for port in node.pm.keys():
-            visible_nodes = set([find_node_from_mac(G, mac) for mac in node.AFT[port]])
-            if(not len(visible_nodes & router) == 0):
+            visible_nodes = set(
+                [find_node_from_mac(G, mac) for mac in node.AFT[port]])
+            if (not len(visible_nodes & router) == 0):
                 node.AFT[port] = []
-    
+
     # for node in G.nodes():
     #     marked[node] = dict()
     #     for port in node.pm.keys():
     #         marked[node][port] = False
 
-    while(not ((len(unmarked) == 0) or (len(unmarked) == 1 and unmarked[0].dtype == DevType.ROUTER))):
+    while (not ((len(unmarked) == 0) or
+                (len(unmarked) == 1 and unmarked[0].dtype == DevType.ROUTER))):
         L = []
         for node in unmarked:
             flag = 0
             for port in node.pm.keys():
-                if(not len(node.AFT[port]) == 0):
+                if (not len(node.AFT[port]) == 0):
                     flag = 1
                     break
-            if(flag == 0):
+            if (flag == 0):
                 L.append(node)
-                
+
         for node in unmarked:
             for port in node.pm.keys():
                 #print(node.label, port)
-                visible_nodes = set([find_node_from_mac(G, mac) for mac in node.AFT[port]])
-                visible_nodes = set([node for node in visible_nodes if not node.dtype == DevType.APPLIANCE]) 
+                visible_nodes = set(
+                    [find_node_from_mac(G, mac) for mac in node.AFT[port]])
+                visible_nodes = set([
+                    node for node in visible_nodes
+                    if not node.dtype == DevType.APPLIANCE
+                ])
                 flag = 0
                 for node1 in visible_nodes:
                     if node1 not in L:
                         flag = 1
                         break
-                if(flag == 1):
+                if (flag == 1):
                     continue
                 for next_node in visible_nodes:
                     edges.append((node, next_node))
@@ -197,27 +227,27 @@ def Skeleton(G, ML):
                     unmarked.remove(next_node)
                     macs = set(next_node.pm.values())
 
-
                     for mac in macs:
                         G = remove_mac(G, mac)
 
                     #print([node.label for node in unmarked])
-                        
+
     return edges
 
+
 def remove_mac(G, mac):
-    nodelist=[]
+    nodelist = []
     new_G = []
-    if(isinstance(G, list)):
+    if (isinstance(G, list)):
         nodelist = G
     else:
         nodelist = G.nodes()
 
     for node in nodelist:
-        if(not hasattr(node, 'pm')):
+        if (not hasattr(node, 'pm')):
             continue
         for port in node.pm.keys():
-            if(mac in node.AFT[port]):
+            if (mac in node.AFT[port]):
                 node.AFT[port].remove(mac)
         new_G.append(node)
 
@@ -228,54 +258,102 @@ def remove_mac(G, mac):
     return G
 
 
-
-
-if __name__ == '__main__':
+def graph_creation(n):
     # Edge devices
-    Laptop = Device("10.0.0.1", "009", 1, "Laptop", DevType.APPLIANCE)
-    HDD_Recorder = Device("10.0.0.2", "090", 2, "HDD_Recorder", DevType.APPLIANCE)
-    Portable_GD = Device("10.0.0.3", "900", 3, "Portable_GD", DevType.APPLIANCE)
-    Audio_device = Device("10.0.0.4", "008", 4, "Audio_device", DevType.APPLIANCE)
-    Air_condition = Device("10.0.0.5", "080", 5, "Air_condition", DevType.APPLIANCE)
-    TV = Device("10.0.0.6", "800", 6, "TV", DevType.APPLIANCE)
-    Gaming_device = Device("10.0.0.7", "006", 7, "Gaming_device", DevType.APPLIANCE)
-    Desktop_PC = Device("10.0.0.8", "060", 8, "Desktop_PC", DevType.APPLIANCE)
-    Security_Cam = Device("10.0.0.9", "600", 9, "Security_Cam", DevType.APPLIANCE)
+    Laptop = Device("10.0.{}.1".format(n - 1), "009", 1,
+                    "Laptop{}".format(n - 1), DevType.APPLIANCE)
+    HDD_Recorder = Device("10.0.{}.2".format(n - 1), "090", 2,
+                          "HDD_Recorder{}".format(n - 1), DevType.APPLIANCE)
+    Portable_GD = Device("10.0.{}.3".format(n - 1), "900", 3,
+                         "Portable_GD{}".format(n - 1), DevType.APPLIANCE)
+    Audio_device = Device("10.0.{}.4".format(n - 1), "008", 4,
+                          "Audio_device{}".format(n - 1), DevType.APPLIANCE)
+    Air_condition = Device("10.0.{}.5".format(n - 1), "080", 5,
+                           "Air_condition{}".format(n - 1), DevType.APPLIANCE)
+    TV = Device("10.0.{}.6".format(n - 1), "800", 6, "TV{}".format(n - 1),
+                DevType.APPLIANCE)
+    Gaming_device = Device("10.0.{}.7".format(n - 1), "006", 7,
+                           "Gaming_device{}".format(n - 1), DevType.APPLIANCE)
+    Desktop_PC = Device("10.0.{}.8".format(n - 1), "060", 8,
+                        "Desktop_PC{}".format(n - 1), DevType.APPLIANCE)
+    Security_Cam = Device("10.0.{}.9".format(n - 1), "600", 9,
+                          "Security_Cam{}".format(n - 1), DevType.APPLIANCE)
 
     # Switches
-    SW1 = NetDevice("10.0.1.1", {1: "010", 2: "010", 3: "010", 4 : "010"}, 10, "Switch1", DevType.SWITCH)
-    SW2 = NetDevice("10.0.1.2", {1: "002", 2: "002", 3: "002"}, 11, "Switch2", DevType.SWITCH)
-    SW3 = NetDevice("10.0.1.3", {1: "003", 2: "003", 3: "003"}, 12, "Switch3", DevType.SWITCH)
-    SW4 = NetDevice("10.0.1.4", {1: "004", 2: "004"}, 13, "Switch4", DevType.SWITCH)
-    PLC1 = NetDevice("10.0.1.5", {1: "005", 2 : "105"}, 14, "PLC1", DevType.SWITCH)
-    PLC2 = NetDevice("10.0.1.6", {1: "006", 2 : "006"}, 15, "PLC2", DevType.SWITCH)
-    PLC3 = NetDevice("10.0.1.7", {1: "007", 2 : "007", 3 : "007"}, 16, "PLC3", DevType.SWITCH)
-    PLC4 = NetDevice("10.0.1.8", {1: "020", 2 : "020", 3: "020"}, 17, "PLC4", DevType.SWITCH)
-    WL1 = NetDevice("10.0.1.9", {1: "200", 2 : "200", 3 : "200"}, 20, "WL1", DevType.SWITCH)
-    WR = NetDevice("10.0.1.10", {1: "001", 2 : "001"}, 21, "WR", DevType.SWITCH)
+    SW1 = NetDevice("10.0.{}.10".format(n - 1), {
+        1: "010",
+        2: "010",
+        3: "010",
+        4: "010"
+    }, 10, "Switch1{}".format(n - 1), DevType.SWITCH)
+    SW2 = NetDevice("10.0.{}.20".format(n - 1), {
+        1: "002",
+        2: "002",
+        3: "002"
+    }, 11, "Switch2{}".format(n - 1), DevType.SWITCH)
+    SW3 = NetDevice("10.0.{}.30".format(n - 1), {
+        1: "003",
+        2: "003",
+        3: "003"
+    }, 12, "Switch3{}".format(n - 1), DevType.SWITCH)
+    SW4 = NetDevice("10.0.{}.40".format(n - 1), {
+        1: "004",
+        2: "004"
+    }, 13, "Switch4{}".format(n - 1), DevType.SWITCH)
+    PLC1 = NetDevice("10.0.{}.50".format(n - 1), {
+        1: "005",
+        2: "105"
+    }, 14, "PLC1{}".format(n - 1), DevType.SWITCH)
+    PLC2 = NetDevice("10.0.{}.60".format(n - 1), {
+        1: "006",
+        2: "006"
+    }, 15, "PLC2{}".format(n - 1), DevType.SWITCH)
+    PLC3 = NetDevice("10.0.{}.70".format(n - 1), {
+        1: "007",
+        2: "007",
+        3: "007"
+    }, 16, "PLC3{}".format(n - 1), DevType.SWITCH)
+    PLC4 = NetDevice("10.0.{}.80".format(n - 1), {
+        1: "020",
+        2: "020",
+        3: "020"
+    }, 17, "PLC4{}".format(n - 1), DevType.SWITCH)
+    WL1 = NetDevice("10.0.{}.90".format(n - 1), {
+        1: "200",
+        2: "200",
+        3: "200"
+    }, 20, "WL1{}".format(n - 1), DevType.SWITCH)
+
+    # Another Router
+    WR = NetDevice("10.0.{}.10".format(n - 1), {
+        1: "001",
+        2: "001"
+    }, 21, "WR{}".format(n - 1), DevType.SWITCH)
 
     # Access gateway
-    AGW = NetDevice("10.1.0.1", {1: "000", 2 : "100"}, 22, "Gateway", DevType.ROUTER)
+    AGW = NetDevice("10.1.{}.1".format(n - 1), {
+        1: "000",
+        2: "100"
+    }, 22, "FloorRouter{}".format(n - 1), DevType.ROUTER)
 
-    node_list = [Laptop, HDD_Recorder, Portable_GD, Audio_device, Air_condition, TV, Gaming_device, Desktop_PC, Security_Cam, AGW, SW1, SW2, SW3, SW4, WL1, WR, PLC1, PLC2, PLC3, PLC4]
-    
+    node_list = [
+        Laptop, HDD_Recorder, Portable_GD, Audio_device, Air_condition, TV,
+        Gaming_device, Desktop_PC, Security_Cam, AGW, SW1, SW2, SW3, SW4, WL1,
+        PLC1, PLC2, PLC3, PLC4, WR
+    ]
+
     G = nx.Graph()
 
     # Add nodes
     G.add_nodes_from(node_list)
 
     # Add edges
-    edge_list = [(AGW, WR), (AGW, SW1), 
-                 (WR, Laptop), 
-                 (SW1, Security_Cam), (SW1, SW2), (SW1, SW3),
-                 (SW2, HDD_Recorder), (SW2, WL1),
-                 (WL1, Audio_device), (WL1, Portable_GD),
-                 (SW3, PLC1), (SW3, SW4), 
-                 (SW4, Desktop_PC),
-                 (PLC1, PLC4),
-                 (PLC4, PLC2), (PLC4, PLC3),
-                 (PLC2, Air_condition),
-                 (PLC3, TV), (PLC3, Gaming_device)]
+    edge_list = [(AGW, WR), (AGW, SW1), (WR, Laptop), (SW1, Security_Cam),
+                 (SW1, SW2), (SW1, SW3), (SW2, HDD_Recorder), (SW2, WL1),
+                 (WL1, Audio_device), (WL1, Portable_GD), (SW3, PLC1),
+                 (SW3, SW4), (SW4, Desktop_PC), (PLC1, PLC4), (PLC4, PLC2),
+                 (PLC4, PLC3), (PLC2, Air_condition), (PLC3, TV),
+                 (PLC3, Gaming_device)]
 
     G.add_edges_from(edge_list)
 
@@ -337,139 +415,171 @@ if __name__ == '__main__':
     G.edges[PLC3, Gaming_device][PLC3] = 3
     G.edges[PLC3, Gaming_device][Gaming_device] = -1
 
+    return G
+
+
+if __name__ == '__main__':
+    G = nx.Graph()
+
+    AGW = NetDevice("99.99.99.99", {
+        1: "000",
+        2: "100"
+    }, 22, "Gateway", DevType.ROUTER)
+
+    G.add_node(AGW)
+
+    node_list = [AGW]
+    edge_list = []
+
+    for n in range(1, 10):
+        subnet = graph_creation(n)
+        xe = [x.label for x in subnet.nodes()]
+        print(xe)
+        node_list.extend(subnet.nodes())
+        edge_list.extend(subnet.edges())
+        G.add_nodes_from(subnet.nodes())
+        G.add_edges_from(subnet.edges())
+        connection_node = [
+            node for node in subnet.nodes()
+            if node.label == "FloorRouter{}".format(n - 1)
+        ]
+        print(connection_node[0].label)
+        G.add_edge(AGW, connection_node[0])
+
     pos = nx.spring_layout(G)
-    
-    ax = plt.subplot(221)
-    ax.set_xlabel('Original network')
+
+    # ax = plt.subplot(221)
+    # ax.set_xlabel('Original network')
 
     nx.draw_networkx_nodes(G,
                            pos,
-                           nodelist=node_list,
+                           nodelist=G.nodes(),
                            node_color='pink',
                            node_size=750,
                            alpha=0.8)
 
     nx.draw_networkx_edges(G,
                            pos,
-                           edgelist=edge_list,
+                           edgelist=G.edges(),
                            width=2,
                            alpha=0.8,
-                           edge_color='black')    
+                           edge_color='black')
 
     mapping = dict()
-    for elem in node_list:
-        mapping[elem] = elem.label              
+    for elem in G.nodes():
+        mapping[elem] = elem.label
 
     nx.draw_networkx_labels(G, pos, mapping, font_size=9, font_color=(0, 0, 0))
 
-    populate_AFT(G)
+    # populate_AFT(G)
 
-    discovered_edges = find_connections(G)
-    discovered_nodes = [node.label for node in G.nodes() if not node.dtype == DevType.APPLIANCE]
+    # discovered_edges = find_connections(G)
+    # discovered_nodes = [
+    #     node.label for node in G.nodes() if not node.dtype == DevType.APPLIANCE
+    # ]
 
-    H = nx.Graph()
-    H.add_nodes_from(discovered_nodes)
-    H.add_edges_from(discovered_edges)
+    # H = nx.Graph()
+    # H.add_nodes_from(discovered_nodes)
+    # H.add_edges_from(discovered_edges)
 
-    pos = nx.spring_layout(H)
+    # pos = nx.spring_layout(H)
 
-    ax = plt.subplot(222)
-    ax.set_xlabel('Discovered network')
+    # ax = plt.subplot(222)
+    # ax.set_xlabel('Discovered network')
 
-    nx.draw_networkx_nodes(H,
-                           pos,
-                           nodelist=discovered_nodes,
-                           node_color='pink',
-                           node_size=700,
-                           alpha=0.8)
+    # nx.draw_networkx_nodes(H,
+    #                        pos,
+    #                        nodelist=discovered_nodes,
+    #                        node_color='pink',
+    #                        node_size=700,
+    #                        alpha=0.8)
 
-    nx.draw_networkx_edges(G,
-                           pos,
-                           edgelist=discovered_edges,
-                           width=1,
-                           alpha=0.9,
-                           edge_color='black')    
+    # nx.draw_networkx_edges(G,
+    #                        pos,
+    #                        edgelist=discovered_edges,
+    #                        width=1,
+    #                        alpha=0.9,
+    #                        edge_color='black')
 
-    mapping = dict()
-    for elem in discovered_nodes:
-        mapping[elem] = elem              
+    # mapping = dict()
+    # for elem in discovered_nodes:
+    #     mapping[elem] = elem
 
-    nx.draw_networkx_labels(H, pos, mapping, font_size=8, font_color=(0, 0, 0))
+    # nx.draw_networkx_labels(H, pos, mapping, font_size=8, font_color=(0, 0, 0))
 
+    # internal_edges = [
+    #     edge for edge in G.edges
+    #     if (not edge[0].dtype == DevType.APPLIANCE) and (
+    #         not edge[1].dtype == DevType.APPLIANCE)
+    # ]
+    # internal_nodes = [
+    #     node for node in G.nodes if not node.dtype == DevType.APPLIANCE
+    # ]
 
+    # H = nx.Graph()
+    # H.add_nodes_from(internal_nodes)
+    # H.add_edges_from(internal_edges)
 
+    # pos = nx.spring_layout(H)
 
+    # ax = plt.subplot(223)
+    # ax.set_xlabel('Original network without the leaf devices')
 
-    internal_edges = [edge for edge in G.edges if (not edge[0].dtype == DevType.APPLIANCE) and (not edge[1].dtype == DevType.APPLIANCE)]
-    internal_nodes = [node for node in G.nodes if not node.dtype == DevType.APPLIANCE]
+    # nx.draw_networkx_nodes(H,
+    #                        pos,
+    #                        nodelist=internal_nodes,
+    #                        node_color='pink',
+    #                        node_size=700,
+    #                        alpha=0.8)
 
-    H = nx.Graph()
-    H.add_nodes_from(internal_nodes)
-    H.add_edges_from(internal_edges)
+    # nx.draw_networkx_edges(G,
+    #                        pos,
+    #                        edgelist=internal_edges,
+    #                        width=1,
+    #                        alpha=0.9,
+    #                        edge_color='black')
 
-    pos = nx.spring_layout(H)
+    # mapping = dict()
+    # for elem in internal_nodes:
+    #     mapping[elem] = elem.label
 
-    ax = plt.subplot(223)
-    ax.set_xlabel('Original network without the leaf devices')
+    # nx.draw_networkx_labels(H, pos, mapping, font_size=8, font_color=(0, 0, 0))
 
-    nx.draw_networkx_nodes(H,
-                           pos,
-                           nodelist=internal_nodes,
-                           node_color='pink',
-                           node_size=700,
-                           alpha=0.8)
+    # internal_edges = Skeleton(G, ['000', '100'])
+    # internal_nodes = [
+    #     node for node in G.nodes if not node.dtype == DevType.APPLIANCE
+    # ]
 
-    nx.draw_networkx_edges(G,
-                           pos,
-                           edgelist=internal_edges,
-                           width=1,
-                           alpha=0.9,
-                           edge_color='black')    
+    # H = nx.Graph()
+    # H.add_nodes_from(internal_nodes)
+    # H.add_edges_from(internal_edges)
 
-    mapping = dict()
-    for elem in internal_nodes:
-        mapping[elem] = elem.label              
+    # pos = nx.spring_layout(H)
 
-    nx.draw_networkx_labels(H, pos, mapping, font_size=8, font_color=(0, 0, 0))
+    # ax = plt.subplot(224)
+    # ax.set_xlabel('Network discovered from algorithm 2')
 
-    internal_edges = Skeleton(G, ['000', '100'])
-    internal_nodes = [node for node in G.nodes if not node.dtype == DevType.APPLIANCE]
+    # nx.draw_networkx_nodes(H,
+    #                        pos,
+    #                        nodelist=internal_nodes,
+    #                        node_color='pink',
+    #                        node_size=700,
+    #                        alpha=0.8)
 
+    # nx.draw_networkx_edges(G,
+    #                        pos,
+    #                        edgelist=internal_edges,
+    #                        width=1,
+    #                        alpha=0.9,
+    #                        edge_color='black')
 
-    H = nx.Graph()
-    H.add_nodes_from(internal_nodes)
-    H.add_edges_from(internal_edges)
+    # mapping = dict()
+    # for elem in internal_nodes:
+    #     mapping[elem] = elem.label
 
-    pos = nx.spring_layout(H)
-
-    ax = plt.subplot(224)
-    ax.set_xlabel('Network discovered from algorithm 2')
-
-    nx.draw_networkx_nodes(H,
-                           pos,
-                           nodelist=internal_nodes,
-                           node_color='pink',
-                           node_size=700,
-                           alpha=0.8)
-
-    nx.draw_networkx_edges(G,
-                           pos,
-                           edgelist=internal_edges,
-                           width=1,
-                           alpha=0.9,
-                           edge_color='black')    
-
-    mapping = dict()
-    for elem in internal_nodes:
-        mapping[elem] = elem.label              
-
-    nx.draw_networkx_labels(H, pos, mapping, font_size=8, font_color=(0, 0, 0))
+    # nx.draw_networkx_labels(H, pos, mapping, font_size=8, font_color=(0, 0, 0))
 
     #print(Skeleton(G, ['000', '100']))
     # print(remove_mac(G, '007'))
 
     plt.show()
-
-
-
-
