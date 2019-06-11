@@ -144,7 +144,7 @@ def find_connections(G):
     return edges
 
 
-def find_MAC(node, port, mac, visited):
+def find_MAC(G, node, port, mac, visited):
     for edge in G.edges():
         if (node in edge) and (G.edges[edge[0], edge[1]][node] == port) and (
                 edge not in visited):
@@ -159,7 +159,7 @@ def find_MAC(node, port, mac, visited):
                 return
             mac.append(next_node.pm[G.edges[edge[0], edge[1]][next_node]])
             for p in next_node.pm.keys():
-                find_MAC(next_node, p, mac, visited)
+                find_MAC(G, next_node, p, mac, visited)
 
 
 def populate_AFT(G):
@@ -168,7 +168,7 @@ def populate_AFT(G):
             for p in node.pm.keys():
                 mac = list()
                 visited = list()
-                find_MAC(node, p, mac, visited)
+                find_MAC(G, node, p, mac, visited)
                 node.AFT[p] = mac
 
 
@@ -360,6 +360,12 @@ def graph_creation(n):
                  (SW3, SW4), (SW4, Desktop_PC), (PLC1, PLC4), (PLC4, PLC2),
                  (PLC4, PLC3), (PLC2, Air_condition), (PLC3, TV),
                  (PLC3, Gaming_device)]
+    # edge_list = [(AGW, SW1), (SW1, Security_Cam),
+    #              (SW1, SW2), (SW1, SW3), (SW2, HDD_Recorder), (SW2, WL1),
+    #              (WL1, Audio_device), (WL1, Portable_GD), (SW3, PLC1),
+    #              (SW3, SW4), (SW4, Desktop_PC), (PLC1, PLC4), (PLC4, PLC2),
+    #              (PLC4, PLC3), (PLC2, Air_condition), (PLC3, TV),
+    #              (PLC3, Gaming_device)]
 
     G.add_edges_from(edge_list)
 
@@ -420,7 +426,7 @@ def graph_creation(n):
 
     G.edges[PLC3, Gaming_device][PLC3] = 3
     G.edges[PLC3, Gaming_device][Gaming_device] = -1
-
+    
     return G
 
 
@@ -441,10 +447,13 @@ if __name__ == '__main__':
         xe = [x.label for x in subnet.nodes()]
         print(xe)
         node_list.extend(subnet.nodes())
-        edge_list.extend(subnet.edges())
+        edge_list.extend(subnet.edges.data())
         G.add_nodes_from(subnet.nodes())
-        print(subnet.edges[G.edges[][]])
-        G.add_edges_from(subnet.edges())
+        
+        for s in G.edges():
+            print(s[0].label, s[1].label)
+
+        G.add_edges_from(subnet.edges.data())
         connection_node = [
             node for node in subnet.nodes()
             if node.label == "FloorRouter{}".format(n - 1)
@@ -458,14 +467,24 @@ if __name__ == '__main__':
         G.edges[AGW, floorRouter][AGW] = n - 1
         G.edges[AGW, floorRouter][floorRouter] = int("1{}".format(n - 1))
 
-    for node in G.nodes():
-        if node.label == 'Gateway':
-            print(node.pm)
 
-    pos = nx.spring_layout(G)
+    # print("lol")
+    # for edge in G.edges():
+    #     print(edge[0].label, edge[1].label)
+    #     print(G.edges[edge[0], edge[1]])
 
-    # ax = plt.subplot(221)
-    # ax.set_xlabel('Original network')
+    # for s in G.edges():
+    #         print(s[0].label, s[1].label)
+    #         print(G.edges[s[0], s[1]])
+            
+    # for node in G.nodes():
+    #     if node.label == 'Gateway':
+    #         print(node.pm)
+
+    pos = nx.planar_layout(G)
+
+    ax = plt.subplot(221)
+    ax.set_xlabel('Original network')
 
     nx.draw_networkx_nodes(G,
                            pos,
@@ -487,118 +506,123 @@ if __name__ == '__main__':
 
     nx.draw_networkx_labels(G, pos, mapping, font_size=9, font_color=(0, 0, 0))
 
-    mac = list()
-    vis = list()
-    find_MAC(AGW, 0, mac, vis)
-    print(mac)
+    # mac = list()
+    # vis = list()
 
-    #populate_AFT(G)
+    # find_MAC(G, AGW, 0, mac, vis)
+    # print(mac)
+    #print(G.edges.data())
+    populate_AFT(G)
 
-    # discovered_edges = find_connections(G)
-    # discovered_nodes = [
-    #     node.label for node in G.nodes() if not node.dtype == DevType.APPLIANCE
-    # ]
+    discovered_edges = find_connections(G)
+    discovered_nodes = [
+        node.label for node in G.nodes() if not node.dtype == DevType.APPLIANCE
+    ]
 
-    # H = nx.Graph()
-    # H.add_nodes_from(discovered_nodes)
-    # H.add_edges_from(discovered_edges)
+    H = nx.Graph()
+    H.add_nodes_from(discovered_nodes)
+    H.add_edges_from(discovered_edges)
 
-    # pos = nx.spring_layout(H)
+    pos = nx.spring_layout(H)
 
-    # ax = plt.subplot(222)
-    # ax.set_xlabel('Discovered network')
+    ax = plt.subplot(222)
+    ax.set_xlabel('Discovered network')
 
-    # nx.draw_networkx_nodes(H,
-    #                        pos,
-    #                        nodelist=discovered_nodes,
-    #                        node_color='pink',
-    #                        node_size=700,
-    #                        alpha=0.8)
+    nx.draw_networkx_nodes(H,
+                           pos,
+                           nodelist=discovered_nodes,
+                           node_color='pink',
+                           node_size=700,
+                           alpha=0.8)
 
-    # nx.draw_networkx_edges(G,
-    #                        pos,
-    #                        edgelist=discovered_edges,
-    #                        width=1,
-    #                        alpha=0.9,
-    #                        edge_color='black')
+    nx.draw_networkx_edges(H,
+                           pos,
+                           edgelist=discovered_edges,
+                           width=1,
+                           alpha=0.9,
+                           edge_color='black')
 
-    # mapping = dict()
-    # for elem in discovered_nodes:
-    #     mapping[elem] = elem
+    mapping = dict()
+    for elem in discovered_nodes:
+        mapping[elem] = elem
 
-    # nx.draw_networkx_labels(H, pos, mapping, font_size=8, font_color=(0, 0, 0))
+    nx.draw_networkx_labels(H, pos, mapping, font_size=8, font_color=(0, 0, 0))
 
-    # internal_edges = [
-    #     edge for edge in G.edges
-    #     if (not edge[0].dtype == DevType.APPLIANCE) and (
-    #         not edge[1].dtype == DevType.APPLIANCE)
-    # ]
-    # internal_nodes = [
-    #     node for node in G.nodes if not node.dtype == DevType.APPLIANCE
-    # ]
+    internal_edges = [
+        edge for edge in G.edges
+        if (not edge[0].dtype == DevType.APPLIANCE) and (
+            not edge[1].dtype == DevType.APPLIANCE)
+    ]
+    internal_nodes = [
+        node for node in G.nodes if not node.dtype == DevType.APPLIANCE
+    ]
 
-    # H = nx.Graph()
-    # H.add_nodes_from(internal_nodes)
-    # H.add_edges_from(internal_edges)
+    H = nx.Graph()
+    H.add_nodes_from(internal_nodes)
+    H.add_edges_from(internal_edges)
 
-    # pos = nx.spring_layout(H)
+    pos = nx.spring_layout(H)
 
-    # ax = plt.subplot(223)
-    # ax.set_xlabel('Original network without the leaf devices')
+    ax = plt.subplot(223)
+    ax.set_xlabel('Original network without the leaf devices')
 
-    # nx.draw_networkx_nodes(H,
-    #                        pos,
-    #                        nodelist=internal_nodes,
-    #                        node_color='pink',
-    #                        node_size=700,
-    #                        alpha=0.8)
+    nx.draw_networkx_nodes(H,
+                           pos,
+                           nodelist=internal_nodes,
+                           node_color='pink',
+                           node_size=700,
+                           alpha=0.8)
 
-    # nx.draw_networkx_edges(G,
-    #                        pos,
-    #                        edgelist=internal_edges,
-    #                        width=1,
-    #                        alpha=0.9,
-    #                        edge_color='black')
+    nx.draw_networkx_edges(G,
+                           pos,
+                           edgelist=internal_edges,
+                           width=1,
+                           alpha=0.9,
+                           edge_color='black')
 
-    # mapping = dict()
-    # for elem in internal_nodes:
-    #     mapping[elem] = elem.label
+    mapping = dict()
+    for elem in internal_nodes:
+        mapping[elem] = elem.label
 
-    # nx.draw_networkx_labels(H, pos, mapping, font_size=8, font_color=(0, 0, 0))
+    nx.draw_networkx_labels(H, pos, mapping, font_size=8, font_color=(0, 0, 0))
 
-    # internal_edges = Skeleton(G, ['000', '100'])
-    # internal_nodes = [
-    #     node for node in G.nodes if not node.dtype == DevType.APPLIANCE
-    # ]
+    masterLabels = []
+    for port in AGW.pm.keys():
+        masterLabels.extend(AGW.pm[port])
 
-    # H = nx.Graph()
-    # H.add_nodes_from(internal_nodes)
-    # H.add_edges_from(internal_edges)
+    internal_edges = Skeleton(G, masterLabels)
+    internal_nodes = [
+        node for node in G.nodes if not node.dtype == DevType.APPLIANCE
+    ]
 
-    # pos = nx.spring_layout(H)
+    H = nx.Graph()
+    H.add_nodes_from(internal_nodes)
+    H.add_edges_from(internal_edges)
 
-    # ax = plt.subplot(224)
-    # ax.set_xlabel('Network discovered from algorithm 2')
+    pos = nx.spring_layout(H)
 
-    # nx.draw_networkx_nodes(H,
-    #                        pos,
-    #                        nodelist=internal_nodes,
-    #                        node_color='pink',
-    #                        node_size=700,
-    #                        alpha=0.8)
+    ax = plt.subplot(224)
+    ax.set_xlabel('Network discovered from algorithm 2')
 
-    # nx.draw_networkx_edges(G,
-    #                        pos,
-    #                        edgelist=internal_edges,
-    #                        width=1,
-    #                        alpha=0.9,
-    #                        edge_color='black')
+    nx.draw_networkx_nodes(H,
+                           pos,
+                           nodelist=internal_nodes,
+                           node_color='pink',
+                           node_size=700,
+                           alpha=0.8)
 
-    # mapping = dict()
-    # for elem in internal_nodes:
-    #     mapping[elem] = elem.label
+    nx.draw_networkx_edges(G,
+                           pos,
+                           edgelist=internal_edges,
+                           width=1,
+                           alpha=0.9,
+                           edge_color='black')
 
-    # nx.draw_networkx_labels(H, pos, mapping, font_size=8, font_color=(0, 0, 0))
+    mapping = dict()
+    for elem in internal_nodes:
+        mapping[elem] = elem.label
+
+    nx.draw_networkx_labels(H, pos, mapping, font_size=8, font_color=(0, 0, 0))
 
     #print(Skeleton(G, ['000', '100']))
     # print(remove_mac(G, '007'))
