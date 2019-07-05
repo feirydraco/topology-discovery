@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import networkx as nx
 import enum
+import timeit
 
 
 class DevType(enum.Enum):
@@ -441,7 +442,7 @@ if __name__ == '__main__':
     node_list = [AGW]
     edge_list = []
 
-    for n in range(1, 3):
+    for n in range(1, 5):
         subnet = graph_creation(n)
         # print(nx.get_edge_attributes(subnet, ))
         xe = [x.label for x in subnet.nodes()]
@@ -481,9 +482,9 @@ if __name__ == '__main__':
     #     if node.label == 'Gateway':
     #         print(node.pm)
 
-    pos = nx.planar_layout(G)
+    pos = nx.spring_layout(G)
 
-    ax = plt.subplot(221)
+    ax = plt.subplot(211)
     ax.set_xlabel('Original network')
 
     nx.draw_networkx_nodes(G,
@@ -506,26 +507,23 @@ if __name__ == '__main__':
 
     nx.draw_networkx_labels(G, pos, mapping, font_size=9, font_color=(0, 0, 0))
 
-    # mac = list()
-    # vis = list()
-
-    # find_MAC(G, AGW, 0, mac, vis)
-    # print(mac)
-    #print(G.edges.data())
     populate_AFT(G)
-
+    
     discovered_edges = find_connections(G)
+    
     discovered_nodes = [
         node.label for node in G.nodes() if not node.dtype == DevType.APPLIANCE
     ]
 
+
+    
     H = nx.Graph()
     H.add_nodes_from(discovered_nodes)
     H.add_edges_from(discovered_edges)
 
     pos = nx.spring_layout(H)
 
-    ax = plt.subplot(222)
+    ax = plt.subplot(212)
     ax.set_xlabel('Discovered network')
 
     nx.draw_networkx_nodes(H,
@@ -557,72 +555,72 @@ if __name__ == '__main__':
         node for node in G.nodes if not node.dtype == DevType.APPLIANCE
     ]
 
-    H = nx.Graph()
-    H.add_nodes_from(internal_nodes)
-    H.add_edges_from(internal_edges)
+    # H = nx.Graph()
+    # H.add_nodes_from(internal_nodes)
+    # H.add_edges_from(internal_edges)
 
-    pos = nx.spring_layout(H)
+    # pos = nx.spring_layout(H)
 
-    ax = plt.subplot(223)
-    ax.set_xlabel('Original network without the leaf devices')
+    # ax = plt.subplot(223)
+    # ax.set_xlabel('Original network without the leaf devices')
 
-    nx.draw_networkx_nodes(H,
-                           pos,
-                           nodelist=internal_nodes,
-                           node_color='pink',
-                           node_size=700,
-                           alpha=0.8)
+    # nx.draw_networkx_nodes(H,
+    #                        pos,
+    #                        nodelist=internal_nodes,
+    #                        node_color='pink',
+    #                        node_size=700,
+    #                        alpha=0.8)
 
-    nx.draw_networkx_edges(G,
-                           pos,
-                           edgelist=internal_edges,
-                           width=1,
-                           alpha=0.9,
-                           edge_color='black')
+    # nx.draw_networkx_edges(G,
+    #                        pos,
+    #                        edgelist=internal_edges,
+    #                        width=1,
+    #                        alpha=0.9,
+    #                        edge_color='black')
 
-    mapping = dict()
-    for elem in internal_nodes:
-        mapping[elem] = elem.label
+    # mapping = dict()
+    # for elem in internal_nodes:
+    #     mapping[elem] = elem.label
 
-    nx.draw_networkx_labels(H, pos, mapping, font_size=8, font_color=(0, 0, 0))
+    # nx.draw_networkx_labels(H, pos, mapping, font_size=8, font_color=(0, 0, 0))
 
-    masterLabels = []
-    for port in AGW.pm.keys():
-        masterLabels.extend(AGW.pm[port])
+    # masterLabels = []
+    # for port in AGW.pm.keys():
+    #     masterLabels.extend(AGW.pm[port])
 
-    internal_edges = Skeleton(G, masterLabels)
-    internal_nodes = [
-        node for node in G.nodes if not node.dtype == DevType.APPLIANCE
-    ]
+    # internal_edges = Skeleton(G, masterLabels)
+    # internal_nodes = [
+    #     node for node in G.nodes if not node.dtype == DevType.APPLIANCE
+    # ]
 
-    H = nx.Graph()
-    H.add_nodes_from(internal_nodes)
-    H.add_edges_from(internal_edges)
+    # H = nx.Graph()
+    # H.add_nodes_from(internal_nodes)
+    # H.add_edges_from(internal_edges)
 
-    pos = nx.spring_layout(H)
+    # pos = nx.spring_layout(H)
 
-    ax = plt.subplot(224)
-    ax.set_xlabel('Network discovered from algorithm 2')
+    # ax = plt.subplot(224)
+    # ax.set_xlabel('Network discovered from algorithm 2')
 
-    nx.draw_networkx_nodes(H,
-                           pos,
-                           nodelist=internal_nodes,
-                           node_color='pink',
-                           node_size=700,
-                           alpha=0.8)
+    # nx.draw_networkx_nodes(H,
+    #                        pos,
+    #                        nodelist=internal_nodes,
+    #                        node_color='pink',
+    #                        node_size=700,
+    #                        alpha=0.8)
 
-    nx.draw_networkx_edges(G,
-                           pos,
-                           edgelist=internal_edges,
-                           width=1,
-                           alpha=0.9,
-                           edge_color='black')
+    # nx.draw_networkx_edges(G,
+    #                        pos,
+    #                        edgelist=internal_edges,
+    #                        width=1,
+    #                        alpha=0.9,
+    #                        edge_color='black')
 
-    mapping = dict()
-    for elem in internal_nodes:
-        mapping[elem] = elem.label
+    # mapping = dict()
+    # for elem in internal_nodes:
+    #     mapping[elem] = elem.label
 
-    nx.draw_networkx_labels(H, pos, mapping, font_size=8, font_color=(0, 0, 0))
+    # nx.draw_networkx_labels(H, pos, mapping, font_size=8, font_color=(0, 0, 0))
 
     #print(Skeleton(G, ['000', '100']))
     # print(remove_mac(G, '007'))
