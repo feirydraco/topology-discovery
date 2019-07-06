@@ -224,7 +224,7 @@ def Skeleton(G, ML):
                     continue
                 for next_node in visible_nodes:
                     edges.append((node, next_node))
-                    print(edges)
+                    # print(edges)
                     unmarked.remove(next_node)
                     macs = set(next_node.pm.values())
 
@@ -442,7 +442,7 @@ if __name__ == '__main__':
     node_list = [AGW]
     edge_list = []
 
-    for n in range(1, 5):
+    for n in range(1, 3):
         subnet = graph_creation(n)
         # print(nx.get_edge_attributes(subnet, ))
         xe = [x.label for x in subnet.nodes()]
@@ -484,7 +484,7 @@ if __name__ == '__main__':
 
     pos = nx.spring_layout(G)
 
-    ax = plt.subplot(211)
+    ax = plt.subplot(221)
     ax.set_xlabel('Original network')
 
     nx.draw_networkx_nodes(G,
@@ -584,43 +584,45 @@ if __name__ == '__main__':
 
     # nx.draw_networkx_labels(H, pos, mapping, font_size=8, font_color=(0, 0, 0))
 
-    # masterLabels = []
-    # for port in AGW.pm.keys():
-    #     masterLabels.extend(AGW.pm[port])
+    masterLabels = []
+    for port in AGW.pm.keys():
+        masterLabels.extend(AGW.pm[port])
 
-    # internal_edges = Skeleton(G, masterLabels)
-    # internal_nodes = [
-    #     node for node in G.nodes if not node.dtype == DevType.APPLIANCE
-    # ]
+    print(masterLabels)
 
-    # H = nx.Graph()
-    # H.add_nodes_from(internal_nodes)
-    # H.add_edges_from(internal_edges)
+    internal_edges = Skeleton(G, masterLabels)
+    internal_nodes = [
+        node for node in G.nodes if not node.dtype == DevType.APPLIANCE
+    ]
 
-    # pos = nx.spring_layout(H)
+    H = nx.Graph()
+    H.add_nodes_from(internal_nodes)
+    H.add_edges_from(internal_edges)
 
-    # ax = plt.subplot(224)
-    # ax.set_xlabel('Network discovered from algorithm 2')
+    pos = nx.spring_layout(H)
 
-    # nx.draw_networkx_nodes(H,
-    #                        pos,
-    #                        nodelist=internal_nodes,
-    #                        node_color='pink',
-    #                        node_size=700,
-    #                        alpha=0.8)
+    ax = plt.subplot(222)
+    ax.set_xlabel('Network discovered from algorithm 2')
 
-    # nx.draw_networkx_edges(G,
-    #                        pos,
-    #                        edgelist=internal_edges,
-    #                        width=1,
-    #                        alpha=0.9,
-    #                        edge_color='black')
+    nx.draw_networkx_nodes(H,
+                           pos,
+                           nodelist=internal_nodes,
+                           node_color='pink',
+                           node_size=700,
+                           alpha=0.8)
 
-    # mapping = dict()
-    # for elem in internal_nodes:
-    #     mapping[elem] = elem.label
+    nx.draw_networkx_edges(G,
+                           pos,
+                           edgelist=internal_edges,
+                           width=1,
+                           alpha=0.9,
+                           edge_color='black')
 
-    # nx.draw_networkx_labels(H, pos, mapping, font_size=8, font_color=(0, 0, 0))
+    mapping = dict()
+    for elem in internal_nodes:
+        mapping[elem] = elem.label
+
+    nx.draw_networkx_labels(H, pos, mapping, font_size=8, font_color=(0, 0, 0))
 
     #print(Skeleton(G, ['000', '100']))
     # print(remove_mac(G, '007'))

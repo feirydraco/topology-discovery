@@ -34,19 +34,42 @@ def create_base(size):
         G.edges[AGW, floorRouter][AGW] = n - 1
         G.edges[AGW, floorRouter][floorRouter] = int("1{}".format(n - 1))
     populate_AFT(G)
+
+    masterLabels = []
+    for port in AGW.pm.keys():
+        masterLabels.extend(AGW.pm[port])
+
     print(len(G.edges()))
-    return G
+    return G, masterLabels
 
 # print(timeit.timeit(setup="from __main__ import create_base\nfrom test import find_connections\ng=create_base({})".format(6), stmt="find_connections(g)", number=2))
 
-times = []
 
-for i in range(2, 16):
-    time_taken = timeit.timeit(setup="from __main__ import create_base\nfrom test import find_connections\ng=create_base({})".format(i), stmt="find_connections(g)", number=2)
-    times.append(time_taken)
-    print(i, time_taken)
+# if __name__ == '__main__':
+
+times1 = []
+times2 = []
+time_taken1 = [0, 0]
+time_taken2 = [0, 0]
+
+
+for i in range(2, 12):
+    
+    time_taken1[0] = timeit.timeit(setup="from __main__ import create_base\nfrom test import find_connections\ng, ml=create_base({})".format(i), stmt="find_connections(g)", number=1)
+    time_taken2[0] = timeit.timeit(setup="from __main__ import create_base\nfrom test import Skeleton\ng, ml=create_base({})\nprint(ml)".format(i), stmt="Skeleton(g, ml)", number=1)
+
+    time_taken1[1] = timeit.timeit(setup="from __main__ import create_base\nfrom test import find_connections\ng, ml=create_base({})".format(i), stmt="find_connections(g)", number=1)
+    time_taken2[1] = timeit.timeit(setup="from __main__ import create_base\nfrom test import Skeleton\ng, ml=create_base({})\nprint(ml)".format(i), stmt="Skeleton(g, ml)", number=1)
+    
+    time1 = sum(time_taken1)/len(time_taken1)
+    time2 = sum(time_taken2)/len(time_taken2)
+
+    times1.append(time1)
+    times2.append(time2)
+
+    print(i, time1, time2)
 
 import matplotlib.pyplot as plt
 
-plt.plot(times, 'r-')
+plt.plot(times1, 'r-', times2, 'b-')
 plt.show()
