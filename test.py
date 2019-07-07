@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import enum
 import timeit
+import sys
 
 
 class DevType(enum.Enum):
@@ -173,7 +174,7 @@ def populate_AFT(G):
                 node.AFT[p] = mac
 
 
-def Skeleton(G, ML):
+def skeleton(G, ML):
     unmarked = [
         node for node in G.nodes() if not node.dtype == DevType.APPLIANCE
     ]
@@ -361,12 +362,6 @@ def graph_creation(n):
                  (SW3, SW4), (SW4, Desktop_PC), (PLC1, PLC4), (PLC4, PLC2),
                  (PLC4, PLC3), (PLC2, Air_condition), (PLC3, TV),
                  (PLC3, Gaming_device)]
-    # edge_list = [(AGW, SW1), (SW1, Security_Cam),
-    #              (SW1, SW2), (SW1, SW3), (SW2, HDD_Recorder), (SW2, WL1),
-    #              (WL1, Audio_device), (WL1, Portable_GD), (SW3, PLC1),
-    #              (SW3, SW4), (SW4, Desktop_PC), (PLC1, PLC4), (PLC4, PLC2),
-    #              (PLC4, PLC3), (PLC2, Air_condition), (PLC3, TV),
-    #              (PLC3, Gaming_device)]
 
     G.add_edges_from(edge_list)
 
@@ -442,7 +437,7 @@ if __name__ == '__main__':
     node_list = [AGW]
     edge_list = []
 
-    for n in range(1, 3):
+    for n in range(1, int(sys.argv[1])):
         subnet = graph_creation(n)
         # print(nx.get_edge_attributes(subnet, ))
         xe = [x.label for x in subnet.nodes()]
@@ -590,7 +585,7 @@ if __name__ == '__main__':
 
     print(masterLabels)
 
-    internal_edges = Skeleton(G, masterLabels)
+    internal_edges = skeleton(G, masterLabels)
     internal_nodes = [
         node for node in G.nodes if not node.dtype == DevType.APPLIANCE
     ]
@@ -624,7 +619,7 @@ if __name__ == '__main__':
 
     nx.draw_networkx_labels(H, pos, mapping, font_size=8, font_color=(0, 0, 0))
 
-    #print(Skeleton(G, ['000', '100']))
+    #print(skeleton(G, ['000', '100']))
     # print(remove_mac(G, '007'))
 
     plt.show()

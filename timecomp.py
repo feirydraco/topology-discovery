@@ -1,4 +1,5 @@
 from test import *
+import sys
 
 
 def create_base(size):
@@ -10,15 +11,10 @@ def create_base(size):
 
     for n in range(1, size):
         subnet = graph_creation(n)
-        # print(nx.get_edge_attributes(subnet, ))
         xe = [x.label for x in subnet.nodes()]
-        # print(xe)
         node_list.extend(subnet.nodes())
         edge_list.extend(subnet.edges.data())
         G.add_nodes_from(subnet.nodes())
-        
-        # for s in G.edges():
-        #     print(s[0].label, s[1].label)
 
         G.add_edges_from(subnet.edges.data())
         connection_node = [
@@ -42,34 +38,50 @@ def create_base(size):
     print(len(G.edges()))
     return G, masterLabels
 
-# print(timeit.timeit(setup="from __main__ import create_base\nfrom test import find_connections\ng=create_base({})".format(6), stmt="find_connections(g)", number=2))
 
+if __name__ == '__main__':
 
-# if __name__ == '__main__':
+    times1 = []
+    times2 = []
+    time_taken1 = [0, 0]
+    time_taken2 = [0, 0]
 
-times1 = []
-times2 = []
-time_taken1 = [0, 0]
-time_taken2 = [0, 0]
+    for i in range(2, int(sys.argv[1])):
 
+        time_taken1[0] = timeit.timeit(
+            setup="from __main__ import create_base\nfrom test import find_connections\ng, ml=create_base({})".format(i),
+            stmt="find_connections(g)",
+            number=1)
+        time_taken2[0] = timeit.timeit(
+            setup="from __main__ import create_base\nfrom test import skeleton\ng, ml=create_base({})\nprint(ml)".format(i),
+            stmt="skeleton(g, ml)",
+            number=1)
 
-for i in range(2, 12):
-    
-    time_taken1[0] = timeit.timeit(setup="from __main__ import create_base\nfrom test import find_connections\ng, ml=create_base({})".format(i), stmt="find_connections(g)", number=1)
-    time_taken2[0] = timeit.timeit(setup="from __main__ import create_base\nfrom test import Skeleton\ng, ml=create_base({})\nprint(ml)".format(i), stmt="Skeleton(g, ml)", number=1)
+        time_taken1[1] = timeit.timeit(
+            setup=
+            "from __main__ import create_base\nfrom test import find_connections\ng, ml=create_base({})".format(i),
+            stmt="find_connections(g)",
+            number=1)
+        time_taken2[1] = timeit.timeit(
+            setup=
+            "from __main__ import create_base\nfrom test import skeleton\ng, ml=create_base({})\nprint(ml)".format(i),
+            stmt="skeleton(g, ml)",
+            number=1)
 
-    time_taken1[1] = timeit.timeit(setup="from __main__ import create_base\nfrom test import find_connections\ng, ml=create_base({})".format(i), stmt="find_connections(g)", number=1)
-    time_taken2[1] = timeit.timeit(setup="from __main__ import create_base\nfrom test import Skeleton\ng, ml=create_base({})\nprint(ml)".format(i), stmt="Skeleton(g, ml)", number=1)
-    
-    time1 = sum(time_taken1)/len(time_taken1)
-    time2 = sum(time_taken2)/len(time_taken2)
+        time1 = sum(time_taken1) / len(time_taken1)
+        time2 = sum(time_taken2) / len(time_taken2)
 
-    times1.append(time1)
-    times2.append(time2)
+        times1.append(time1)
+        times2.append(time2)
 
-    print(i, time1, time2)
+        print(i, time1, time2)
 
-import matplotlib.pyplot as plt
+    import matplotlib.pyplot as plt
 
-plt.plot(times1, 'r-', times2, 'b-')
-plt.show()
+    plt.plot(times1, 'r-', label="Old Algorithm")
+    plt.plot(times2, 'b-', label="Improved Algorithm")
+    plt.legend(loc='upper right')
+    plt.xlabel("Number of nodes/subnets")
+    plt.ylabel("Time taken")
+
+    plt.show()
