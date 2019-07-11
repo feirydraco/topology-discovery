@@ -455,7 +455,7 @@ if __name__ == '__main__':
         subnet = graph_creation(n)
         # print(nx.get_edge_attributes(subnet, #))
         xe = [x.label for x in subnet.nodes()]
-        print(xe)
+        # print(xe)
         node_list.extend(subnet.nodes())
         edge_list.extend(subnet.edges.data())
         G.add_nodes_from(subnet.nodes())
@@ -470,7 +470,7 @@ if __name__ == '__main__':
         ]
         floorRouter = connection_node[0]
 
-        print("Test: " + connection_node[0].label)
+        # print("Test: " + connection_node[0].label)
 
         AGW.pm[n - 1] = "{}".format(n - 1)
         floorRouter.pm[int("1{}".format(n - 1))] = "999{}".format(n - 1)
@@ -599,7 +599,7 @@ if __name__ == '__main__':
     for port in AGW.pm.keys():
         masterLabels.extend(AGW.pm[port])
 
-    print(masterLabels)
+    # print(masterLabels)
 
     internal_edges = skeleton(G, masterLabels)
     internal_nodes = [
