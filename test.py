@@ -132,16 +132,29 @@ def find_connections(G):
                                     (switch1.label, switch2.label
                                      ))  # {switch1: port1, switch2: port2}))
 
+    #connect floor routers to leaf switches
     for router in routers:
-        for switch in switches:
-            for port in switch.pm.keys():
-                if not matched[switch][port]:
-                    mac = [
-                        find_node_from_mac(G, mac) for mac in switch.AFT[port]
-                    ]
-                    if (router in mac):
-                        matched[switch][port] = True
-                        edges.append((switch.label, router.label))
+        if not router.label == "Gateway":
+            for switch in switches:
+                for port in switch.pm.keys():
+                    if not matched[switch][port]:
+                        mac = [
+                            find_node_from_mac(G, mac) for mac in switch.AFT[port]
+                        ]
+
+                        temp = [ m.label for m in mac]
+
+                        if (router in mac) and int(router.label[-1]) == int(switch.label[-1]):
+                            matched[switch][port] = True
+                            edges.append((switch.label, router.label))
+
+    gateway = [ router for router in routers if router.label == "Gateway"]
+    gateway = gateway[0]
+
+    #connect all the floor routers to AGW
+    for router in routers:
+        if not router.label == "Gateway":
+            edges.append((router.label, gateway.label))
 
     return edges
 
@@ -438,16 +451,17 @@ if __name__ == '__main__':
     edge_list = []
 
     for n in range(1, int(sys.argv[1])):
+    #for n in range(1, 4):
         subnet = graph_creation(n)
-        # print(nx.get_edge_attributes(subnet, ))
+        # print(nx.get_edge_attributes(subnet, #))
         xe = [x.label for x in subnet.nodes()]
         print(xe)
         node_list.extend(subnet.nodes())
         edge_list.extend(subnet.edges.data())
         G.add_nodes_from(subnet.nodes())
         
-        for s in G.edges():
-            print(s[0].label, s[1].label)
+        # for s in G.edges():
+        #    print(s[0].label, s[1].label)
 
         G.add_edges_from(subnet.edges.data())
         connection_node = [
@@ -455,6 +469,8 @@ if __name__ == '__main__':
             if node.label == "FloorRouter{}".format(n - 1)
         ]
         floorRouter = connection_node[0]
+
+        print("Test: " + connection_node[0].label)
 
         AGW.pm[n - 1] = "{}".format(n - 1)
         floorRouter.pm[int("1{}".format(n - 1))] = "999{}".format(n - 1)
