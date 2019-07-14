@@ -139,16 +139,18 @@ def find_connections(G):
                 for port in switch.pm.keys():
                     if not matched[switch][port]:
                         mac = [
-                            find_node_from_mac(G, mac) for mac in switch.AFT[port]
+                            find_node_from_mac(G, mac)
+                            for mac in switch.AFT[port]
                         ]
 
-                        temp = [ m.label for m in mac]
+                        temp = [m.label for m in mac]
 
-                        if (router in mac) and int(router.label[-1]) == int(switch.label[-1]):
+                        if (router in mac) and int(router.label[-1]) == int(
+                                switch.label[-1]):
                             matched[switch][port] = True
                             edges.append((switch.label, router.label))
 
-    gateway = [ router for router in routers if router.label == "Gateway"]
+    gateway = [router for router in routers if router.label == "Gateway"]
     gateway = gateway[0]
 
     #connect all the floor routers to AGW
@@ -435,13 +437,12 @@ def graph_creation(n):
 
     G.edges[PLC3, Gaming_device][PLC3] = 3
     G.edges[PLC3, Gaming_device][Gaming_device] = -1
-    
+
     return G
 
 
 if __name__ == '__main__':
     G = nx.Graph()
-    n = 10
 
     AGW = NetDevice("99.99.99.99", dict(), 22, "Gateway", DevType.ROUTER)
 
@@ -451,17 +452,11 @@ if __name__ == '__main__':
     edge_list = []
 
     for n in range(1, int(sys.argv[1])):
-    #for n in range(1, 4):
         subnet = graph_creation(n)
-        # print(nx.get_edge_attributes(subnet, #))
         xe = [x.label for x in subnet.nodes()]
-        # print(xe)
         node_list.extend(subnet.nodes())
         edge_list.extend(subnet.edges.data())
         G.add_nodes_from(subnet.nodes())
-        
-        # for s in G.edges():
-        #    print(s[0].label, s[1].label)
 
         G.add_edges_from(subnet.edges.data())
         connection_node = [
@@ -470,8 +465,6 @@ if __name__ == '__main__':
         ]
         floorRouter = connection_node[0]
 
-        # print("Test: " + connection_node[0].label)
-
         AGW.pm[n - 1] = "{}".format(n - 1)
         floorRouter.pm[int("1{}".format(n - 1))] = "999{}".format(n - 1)
         G.add_edge(AGW, floorRouter)
@@ -479,24 +472,11 @@ if __name__ == '__main__':
         G.edges[AGW, floorRouter][AGW] = n - 1
         G.edges[AGW, floorRouter][floorRouter] = int("1{}".format(n - 1))
 
-
-    # print("lol")
-    # for edge in G.edges():
-    #     print(edge[0].label, edge[1].label)
-    #     print(G.edges[edge[0], edge[1]])
-
-    # for s in G.edges():
-    #         print(s[0].label, s[1].label)
-    #         print(G.edges[s[0], s[1]])
-            
-    # for node in G.nodes():
-    #     if node.label == 'Gateway':
-    #         print(node.pm)
-
     pos = nx.spring_layout(G)
 
-    ax = plt.subplot(221)
-    ax.set_xlabel('Original network')
+    # ax = plt.subplot(221)
+    plt.figure()
+    plt.title("Original Network")
 
     nx.draw_networkx_nodes(G,
                            pos,
@@ -519,23 +499,23 @@ if __name__ == '__main__':
     nx.draw_networkx_labels(G, pos, mapping, font_size=9, font_color=(0, 0, 0))
 
     populate_AFT(G)
-    
+
     discovered_edges = find_connections(G)
-    
+
     discovered_nodes = [
         node.label for node in G.nodes() if not node.dtype == DevType.APPLIANCE
     ]
 
-
-    
     H = nx.Graph()
     H.add_nodes_from(discovered_nodes)
     H.add_edges_from(discovered_edges)
 
     pos = nx.spring_layout(H)
 
-    ax = plt.subplot(212)
-    ax.set_xlabel('Discovered network')
+    # ax = plt.subplot(212)
+    # ax.set_xlabel('')
+    plt.figure()
+    plt.title("Discovered network")
 
     nx.draw_networkx_nodes(H,
                            pos,
@@ -566,40 +546,9 @@ if __name__ == '__main__':
         node for node in G.nodes if not node.dtype == DevType.APPLIANCE
     ]
 
-    # H = nx.Graph()
-    # H.add_nodes_from(internal_nodes)
-    # H.add_edges_from(internal_edges)
-
-    # pos = nx.spring_layout(H)
-
-    # ax = plt.subplot(223)
-    # ax.set_xlabel('Original network without the leaf devices')
-
-    # nx.draw_networkx_nodes(H,
-    #                        pos,
-    #                        nodelist=internal_nodes,
-    #                        node_color='pink',
-    #                        node_size=700,
-    #                        alpha=0.8)
-
-    # nx.draw_networkx_edges(G,
-    #                        pos,
-    #                        edgelist=internal_edges,
-    #                        width=1,
-    #                        alpha=0.9,
-    #                        edge_color='black')
-
-    # mapping = dict()
-    # for elem in internal_nodes:
-    #     mapping[elem] = elem.label
-
-    # nx.draw_networkx_labels(H, pos, mapping, font_size=8, font_color=(0, 0, 0))
-
     masterLabels = []
     for port in AGW.pm.keys():
         masterLabels.extend(AGW.pm[port])
-
-    # print(masterLabels)
 
     internal_edges = skeleton(G, masterLabels)
     internal_nodes = [
@@ -612,8 +561,8 @@ if __name__ == '__main__':
 
     pos = nx.spring_layout(H)
 
-    ax = plt.subplot(222)
-    ax.set_xlabel('Network discovered from algorithm 2')
+    plt.figure()
+    plt.title("Network discovered from algorithm 2")
 
     nx.draw_networkx_nodes(H,
                            pos,
