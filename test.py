@@ -39,7 +39,8 @@ class NetDevice:
         return self.dtype
 
     def dispAFT(self):
-        print(self.AFT)
+        for key in self.AFT:
+            print(key, self.AFT[key])
 
 
 def find_node_from_ip(G, ip):
@@ -440,6 +441,11 @@ def graph_creation(n):
 
     return G
 
+def print_AFT(G):
+    for node in G.nodes():
+        if(hasattr(node, 'AFT')):
+            print('\n' + node.label)
+            node.dispAFT()
 
 if __name__ == '__main__':
     G = nx.Graph()
@@ -505,7 +511,9 @@ if __name__ == '__main__':
     discovered_nodes = [
         node.label for node in G.nodes() if not node.dtype == DevType.APPLIANCE
     ]
-
+    
+    print_AFT(G)
+    
     H = nx.Graph()
     H.add_nodes_from(discovered_nodes)
     H.add_edges_from(discovered_edges)
