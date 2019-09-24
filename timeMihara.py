@@ -41,6 +41,7 @@ def create_base(size):
 
 if __name__ == '__main__':
 
+    x = []
     times1 = []
     times2 = []
     time_taken1 = [0, 0]
@@ -60,14 +61,17 @@ if __name__ == '__main__':
         time1 = sum(time_taken1) / len(time_taken1)
 
         times1.append(time1)
+        x.append(i)
 
-        print(i, time1)
+        print(i, times1)
 
     import matplotlib.pyplot as plt
 
-    plt.plot(times1, 'r-', label="Mihara's Alogorithm")
+    plt.bar(x, times1, label="Mihara's Algorithm")
+    plt.axis([2, int(sys.argv[1]), 0, max(times1) + 0.015])
     plt.legend(loc='upper right')
     plt.xlabel("Number of nodes/subnets")
     plt.ylabel("Time taken")
+
 
     plt.show()
